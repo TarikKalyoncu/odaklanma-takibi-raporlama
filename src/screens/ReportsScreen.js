@@ -229,3 +229,106 @@ export default function ReportsScreen() {
   );
 }
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.light,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: COLORS.dark,
+    margin: 20,
+    marginTop: 60,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+  statCard: {
+    backgroundColor: COLORS.white,
+    padding: 20,
+    borderRadius: 15,
+    marginBottom: 15,
+    width: '48%',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  distractionCard: {
+    width: '100%',
+  },
+  statLabel: {
+    fontSize: 14,
+    color: COLORS.gray,
+    marginBottom: 5,
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+  },
+  distractionValue: {
+    color: COLORS.danger,
+  },
+  chartContainer: {
+    backgroundColor: COLORS.white,
+    marginHorizontal: 20,
+    marginBottom: 20,
+    borderRadius: 15,
+    padding: 15,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  chartTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: COLORS.dark,
+    marginBottom: 15,
+  },
+  chart: {
+    borderRadius: 16,
+    marginVertical: 8,
+  },
+  noDataContainer: {
+    height: 220,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: COLORS.light,
+    borderRadius: 16,
+  },
+  noDataText: {
+    fontSize: 16,
+    color: COLORS.gray,
+  },
+  clearButton: {
+    backgroundColor: COLORS.danger,
+    marginHorizontal: 20,
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  clearButtonText: {
+    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  footer: {
+    height: 30,
+  },
+});

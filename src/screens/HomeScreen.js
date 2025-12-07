@@ -255,37 +255,7 @@ export default function HomeScreen() {
       </Modal>
 
       {/* Seans Özeti Modal */}
-      <Modal
-        visible={showSummary}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowSummary(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.summaryContent}>
-            <Text style={styles.summaryTitle}>
-              {sessionSummary?.completed ? '🎉 Tebrikler!' : '📊 Seans Özeti'}
-            </Text>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>Kategori:</Text>
-              <Text style={styles.summaryValue}>{sessionSummary?.category}</Text>
-            </View>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>Süre:</Text>
-              <Text style={styles.summaryValue}>
-                {sessionSummary ? Math.floor(sessionSummary.duration / 60) : 0} dakika
-              </Text>
-            </View>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>Dikkat Dağınıklığı:</Text>
-              <Text style={styles.summaryValue}>{sessionSummary?.distractions}</Text>
-            </View>
-            <TouchableOpacity style={styles.summaryButton} onPress={handleSaveAndReset}>
-              <Text style={styles.summaryButtonText}>Tamam</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      
     </View>
   );
 }

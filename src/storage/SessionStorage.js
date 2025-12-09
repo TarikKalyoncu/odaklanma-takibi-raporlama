@@ -62,32 +62,32 @@ export const getTodaySessions = async () => {
 };
 
 /**
-* Son 7 günün seanslarını getirir
-* @returns {Array} Son 7 günün seansları
-*/
+ * Son 7 günün seanslarını getirir
+ * @returns {Array} Son 7 günün seansları
+ */
 export const getLastSevenDaysSessions = async () => {
   try {
-  const allSessions = await getSessions();
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-  
-  return allSessions.filter(session => {
-  const sessionDate = new Date(session.date);
-  return sessionDate >= sevenDaysAgo;
-  });
+    const allSessions = await getSessions();
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    return allSessions.filter(session => {
+      const sessionDate = new Date(session.date);
+      return sessionDate >= sevenDaysAgo;
+    });
   } catch (error) {
-  console.error('Son 7 günün seanslarını getirme hatası:', error);
-  return [];
+    console.error('Son 7 günün seanslarını getirme hatası:', error);
+    return [];
   }
-  };
-  
-  /**
-  * Tüm seansları siler (test amaçlı)
-  */
-  export const clearAllSessions = async () => {
+};
+
+/**
+ * Tüm seansları siler (test amaçlı)
+ */
+export const clearAllSessions = async () => {
   try {
-  await AsyncStorage.removeItem(SESSIONS_KEY);
+    await AsyncStorage.removeItem(SESSIONS_KEY);
   } catch (error) {
-  console.error('Seansları silme hatası:', error);
+    console.error('Seansları silme hatası:', error);
   }
-  };
+};

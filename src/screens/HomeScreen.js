@@ -8,20 +8,18 @@ import {
   Modal,
   ScrollView,
   Alert,
-  Switch, // EKLENDİ
-  StatusBar, // EKLENDİ (Üst bar rengini değiştirmek için)
+  Switch,
+  StatusBar,
+  Vibration, // Titreşim için ekledik (İstersen kaldırabilirsin)
 } from 'react-native';
-import { CATEGORIES, DEFAULT_DURATION } from '../utils/constants'; // COLORS buradan silindi, context'ten gelecek
+import { CATEGORIES, DEFAULT_DURATION } from '../utils/constants';
 import { formatTime, minutesToSeconds } from '../utils/timeUtils';
 import { saveSession } from '../storage/SessionStorage';
 import { useTheme } from '../context/ThemeContext';
 
 export default function HomeScreen() {
-  // TEMA HOOK'UNU ÇAĞIRIYORUZ
-  const { theme, isDarkMode, toggleTheme } = useTheme(); 
-  
-  // Stilleri tema rengine göre yeniden oluşturuyoruz
-  const styles = createStyles(theme); 
+  const { theme, isDarkMode, toggleTheme } = useTheme();
+  const styles = createStyles(theme);
 
   const [timeLeft, setTimeLeft] = useState(minutesToSeconds(DEFAULT_DURATION));
   const [isRunning, setIsRunning] = useState(false);
@@ -35,7 +33,7 @@ export default function HomeScreen() {
   const intervalRef = useRef(null);
   const appStateRef = useRef(AppState.currentState);
   const totalDuration = useRef(minutesToSeconds(DEFAULT_DURATION));
-  
+
   // Zamanlayıcı
   useEffect(() => {
     if (isRunning && timeLeft > 0) {
@@ -53,7 +51,6 @@ export default function HomeScreen() {
         clearInterval(intervalRef.current);
       }
     }
-
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
@@ -64,12 +61,14 @@ export default function HomeScreen() {
   // AppState Listener - Dikkat Dağınıklığı Takibi
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextAppState) => {
-      // Eğer uygulama çalışıyorsa ve arka plana giderse
       if (
         isRunning &&
         appStateRef.current === 'active' &&
         nextAppState.match(/inactive|background/)
       ) {
+        // Uyarı titreşimi
+        Vibration.vibrate(500);
+        
         setDistractions((prev) => prev + 1);
         setIsRunning(false);
         Alert.alert(
@@ -78,36 +77,19 @@ export default function HomeScreen() {
           [{ text: 'Tamam' }]
         );
       }
-
       appStateRef.current = nextAppState;
     });
-
     return () => {
       subscription.remove();
     };
   }, [isRunning]);
 
-  const handleStart = () => {
-    if (timeLeft === 0) {
-      Alert.alert('Uyarı', 'Lütfen önce zamanlayıcıyı sıfırlayın.');
-      return;
-    }
-    setIsRunning(true);
-  };
-
-  const handlePause = () => {
-    setIsRunning(false);
-  };
-
-  const handleReset = () => {
-    setIsRunning(false);
-    setTimeLeft(totalDuration.current);
-    setDistractions(0);
-  };
-
   const handleSessionComplete = async () => {
     setIsRunning(false);
     
+    // Bitiş titreşimi
+    Vibration.vibrate([0, 500, 200, 500]); 
+
     const completedDuration = totalDuration.current - timeLeft;
     const summary = {
       category: selectedCategory.label,
@@ -116,7 +98,6 @@ export default function HomeScreen() {
       completed: timeLeft === 0,
     };
 
-    // Veritabanına kaydet
     try {
       await saveSession({
         category: selectedCategory.value,
@@ -133,19 +114,14 @@ export default function HomeScreen() {
 
   const handleSaveAndReset = () => {
     setShowSummary(false);
-    handleReset();
+    setIsRunning(false);
+    setTimeLeft(totalDuration.current);
+    setDistractions(0);
   };
 
   const handleCategorySelect = (category) => {
     setSelectedCategory(category);
     setShowCategoryModal(false);
-  };
-
-  const handleDurationChange = (minutes) => {
-    const newDuration = minutesToSeconds(minutes);
-    setCustomMinutes(minutes);
-    setTimeLeft(newDuration);
-    totalDuration.current = newDuration;
   };
 
   const progress = ((totalDuration.current - timeLeft) / totalDuration.current) * 100;
@@ -154,7 +130,7 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       
-      {/* BAŞLIK VE SWITCH ALANI */}
+      {/* HEADER & SWITCH */}
       <View style={styles.headerContainer}>
         <Text style={styles.title}>Odaklanma Takibi</Text>
         <View style={styles.switchContainer}>
@@ -169,9 +145,7 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {/* Geri kalan JSX yapısı neredeyse aynı, sadece style nesnesi artık dinamik */}
-      
-      {/* Kategori Seçici */}
+      {/* KATEGORİ SEÇİCİ BUTON (ARADIĞIN BUTON BURADA) */}
       <TouchableOpacity
         style={[styles.categoryButton, { backgroundColor: selectedCategory.color }]}
         onPress={() => setShowCategoryModal(true)}
@@ -181,8 +155,7 @@ export default function HomeScreen() {
         <Text style={styles.categoryText}>{selectedCategory.label}</Text>
       </TouchableOpacity>
 
-      {/* ... Diğer kodlar (Süre ayarlayıcı, Zamanlayıcı vb.) aynı ... */}
-      
+      {/* SÜRE SEÇİCİ */}
       {!isRunning && (
         <View style={styles.durationSelector}>
           <Text style={styles.durationLabel}>Süre Ayarla:</Text>
@@ -215,7 +188,7 @@ export default function HomeScreen() {
         </View>
       )}
 
-      {/* Zamanlayıcı */}
+      {/* ZAMANLAYICI */}
       <View style={styles.timerContainer}>
         <View style={[styles.progressRing, { borderColor: selectedCategory.color }]}>
           <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
@@ -225,13 +198,13 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {/* Dikkat Dağınıklığı Sayacı */}
+      {/* DİKKAT DAĞINIKLIĞI */}
       <View style={styles.distractionsContainer}>
         <Text style={styles.distractionsLabel}>Dikkat Dağınıklığı</Text>
         <Text style={styles.distractionsCount}>{distractions}</Text>
       </View>
 
-      {/* Kontrol Butonları */}
+      {/* KONTROLLER */}
       <View style={styles.controls}>
         {!isRunning ? (
           <TouchableOpacity style={[styles.button, styles.startButton]} onPress={() => setIsRunning(true)}>
@@ -251,19 +224,87 @@ export default function HomeScreen() {
           <Text style={styles.buttonText}>↻ Sıfırla</Text>
         </TouchableOpacity>
       </View>
+
+      {isRunning && timeLeft < totalDuration.current && (
+        <TouchableOpacity style={[styles.button, styles.completeButton]} onPress={handleSessionComplete}>
+          <Text style={styles.buttonText}>✓ Seansı Bitir</Text>
+        </TouchableOpacity>
+      )}
       
-      {/* ... Modallar aynı kalacak ... */}
-      
+      {/* --- EKSİK OLAN KISIMLAR AŞAĞIDAYDI, ŞİMDİ EKLENDİ --- */}
+
+      {/* KATEGORİ MODALI */}
+      <Modal
+        visible={showCategoryModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowCategoryModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Kategori Seç</Text>
+            <ScrollView>
+              {CATEGORIES.map((category) => (
+                <TouchableOpacity
+                  key={category.value}
+                  style={[styles.categoryOption, { backgroundColor: category.color }]}
+                  onPress={() => handleCategorySelect(category)}
+                >
+                  <Text style={styles.categoryOptionIcon}>{category.icon}</Text>
+                  <Text style={styles.categoryOptionText}>{category.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setShowCategoryModal(false)}
+            >
+              <Text style={styles.closeButtonText}>Kapat</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ÖZET MODALI */}
+      <Modal
+        visible={showSummary}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowSummary(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.summaryContent}>
+            <Text style={styles.summaryTitle}>
+              {sessionSummary?.completed ? '🎉 Tebrikler!' : '📊 Seans Özeti'}
+            </Text>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>Kategori:</Text>
+              <Text style={styles.summaryValue}>{sessionSummary?.category}</Text>
+            </View>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>Süre:</Text>
+              <Text style={styles.summaryValue}>
+                {sessionSummary ? Math.floor(sessionSummary.duration / 60) : 0} dakika
+              </Text>
+            </View>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>Dikkat Dağınıklığı:</Text>
+              <Text style={styles.summaryValue}>{sessionSummary?.distractions}</Text>
+            </View>
+            <TouchableOpacity style={styles.summaryButton} onPress={handleSaveAndReset}>
+              <Text style={styles.summaryButtonText}>Tamam</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
 
-// STİLLERİ ARTIK BİR FONKSİYON OLARAK TANIMLIYORUZ
-// Bu sayede 'theme' değiştiğinde renkler de değişecek
 const createStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.light, // Dinamik
+    backgroundColor: theme.light,
     padding: 20,
     alignItems: 'center',
   },
@@ -286,7 +327,7 @@ const createStyles = (theme) => StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: theme.dark, // Dinamik
+    color: theme.dark,
   },
   categoryButton: {
     flexDirection: 'row',
@@ -304,7 +345,7 @@ const createStyles = (theme) => StyleSheet.create({
   categoryText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FFFFFF', // Bu sabit kalabilir
+    color: '#FFFFFF',
   },
   durationSelector: {
     width: '100%',
@@ -313,7 +354,7 @@ const createStyles = (theme) => StyleSheet.create({
   durationLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: theme.dark, // Dinamik
+    color: theme.dark,
     marginBottom: 10,
   },
   durationButtons: {
@@ -325,9 +366,9 @@ const createStyles = (theme) => StyleSheet.create({
     padding: 12,
     marginHorizontal: 5,
     borderRadius: 10,
-    backgroundColor: theme.white, // Dinamik
+    backgroundColor: theme.white,
     borderWidth: 2,
-    borderColor: theme.gray, // Dinamik
+    borderColor: theme.gray,
     alignItems: 'center',
   },
   durationButtonActive: {
@@ -337,7 +378,7 @@ const createStyles = (theme) => StyleSheet.create({
   durationButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: theme.gray, // Dinamik
+    color: theme.gray,
   },
   durationButtonTextActive: {
     color: '#FFFFFF',
@@ -354,17 +395,17 @@ const createStyles = (theme) => StyleSheet.create({
     borderWidth: 10,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: theme.white, // Dinamik
+    backgroundColor: theme.white,
   },
   timerText: {
     fontSize: 60,
     fontWeight: 'bold',
-    color: theme.dark, // Dinamik
+    color: theme.dark,
   },
   progressBarContainer: {
     width: '100%',
     height: 8,
-    backgroundColor: theme.white, // Dinamik
+    backgroundColor: theme.white,
     borderRadius: 4,
     marginTop: 20,
     overflow: 'hidden',
@@ -376,7 +417,7 @@ const createStyles = (theme) => StyleSheet.create({
   distractionsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.white, // Dinamik
+    backgroundColor: theme.white,
     padding: 15,
     borderRadius: 10,
     marginBottom: 30,
@@ -385,7 +426,7 @@ const createStyles = (theme) => StyleSheet.create({
   },
   distractionsLabel: {
     fontSize: 16,
-    color: theme.gray, // Dinamik
+    color: theme.gray,
   },
   distractionsCount: {
     fontSize: 24,
@@ -424,5 +465,95 @@ const createStyles = (theme) => StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  // Modal stillerini de güncellemek gerekebilir ancak şimdilik temel UI yeterli
+  // Modal stilleri (KODDA EKSİKTİ, EKLENDİ)
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: theme.modalOverlay,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: theme.white,
+    borderRadius: 20,
+    padding: 20,
+    width: '85%',
+    maxHeight: '70%',
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+    color: theme.dark,
+  },
+  categoryOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  categoryOptionIcon: {
+    fontSize: 28,
+    marginRight: 10,
+  },
+  categoryOptionText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  closeButton: {
+    backgroundColor: theme.gray,
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 10,
+  },
+  closeButtonText: {
+    color: '#FFFFFF',
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  summaryContent: {
+    backgroundColor: theme.white,
+    borderRadius: 20,
+    padding: 30,
+    width: '85%',
+  },
+  summaryTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 25,
+    textAlign: 'center',
+    color: theme.dark,
+  },
+  summaryItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 15,
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.light,
+  },
+  summaryLabel: {
+    fontSize: 16,
+    color: theme.gray,
+  },
+  summaryValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: theme.dark,
+  },
+  summaryButton: {
+    backgroundColor: theme.primary,
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 10,
+  },
+  summaryButtonText: {
+    color: '#FFFFFF',
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });

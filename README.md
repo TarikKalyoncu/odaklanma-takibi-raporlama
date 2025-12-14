@@ -197,7 +197,7 @@ Veri temizleme özelliği test amaçlıdır. Raporlar ekranının en altındaki 
 
 ## 👨‍💻 Geliştirici
 
-**Beyza**  
+**Tarık**  
 Sakarya Üniversitesi - Bilgisayar Mühendisliği  
 BSM 447 - Mobil Uygulama Geliştirme
 
